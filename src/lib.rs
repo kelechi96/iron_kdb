@@ -55,24 +55,3 @@ impl KdbConnection {
         ret_val
     }
 }
-
-
-#[cfg(test)]
-mod tests {
-    use crate::KdbConnection;
-    use crate::codec::{KdbRequest, Payload};
-
-    #[test]
-    fn local_integration_test() {
-        let mut connection = KdbConnection::new("127.0.0.1:1550").unwrap();
-        connection.connect("", "").unwrap();
-
-        if let Payload::CharVector(_, vec) = connection.query(KdbRequest::new("\"ABC\"").unwrap()).unwrap() {
-            assert_eq!("ABC", vec);
-        }
-
-        if let Payload::Long(val) = connection.query(KdbRequest::new("1+5").unwrap()).unwrap() {
-            assert_eq!(6, val);
-        }
-    }
-}
