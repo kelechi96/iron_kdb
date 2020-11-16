@@ -18,7 +18,7 @@ impl KdbConnection {
     /// Sends handshake byte
     pub fn connect(&mut self, user: &str, pwd: &str) -> std::io::Result<()> {
         let mut user_pass = format!("{}:{}", user, pwd);
-        user_pass.push(3 as char);
+        user_pass.push(0 as char);
         user_pass.push(0 as char);
         self.tcp_connection.write_all(user_pass.into_ascii_string().unwrap().as_bytes())?;
         let mut buf = [0u8; 1];
