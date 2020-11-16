@@ -124,6 +124,7 @@ pub enum Payload {
 }
 
 impl Payload {
+    #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<Payload, String> {
         let type_byte = bytes[0] as i8;
 
@@ -142,24 +143,24 @@ impl Payload {
             -1 => if bytes[1] < 2 && bytes.len() == 2 { Ok(Payload::Bool(bytes[1] != 0)) } else { Err(String::from("Failed to parse type")) },
             1 => Ok(Payload::BoolVector(bytes[1].try_into()?, bytes[6..6 + Self::get_vec_size(&bytes[2..6])?].iter().map(|x| *x != 0).collect())),
             -2 => Ok(Payload::GUID(u128::from_le_bytes(bytes[1..17].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            2 => Ok(Payload::GUIDVector(bytes[1].try_into()?, bytes[6..6 + 16 * Self::get_vec_size(&bytes[2..6])?].chunks(2)
+            2 => Ok(Payload::GUIDVector(bytes[1].try_into()?, bytes[6..6 + 16 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(2)
                 .map(|x| x.try_into().map(u128::from_le_bytes)).collect::<Result<Vec<u128>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -4 => Ok(Payload::Byte(bytes[1])),
             4 => Ok(Payload::ByteVector(bytes[1].try_into()?, bytes[6..6 + Self::get_vec_size(&bytes[2..6])?].iter().copied().collect())),
             -5 => Ok(Payload::Short(u16::from_le_bytes(bytes[1..3].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            5 => Ok(Payload::ShortVector(bytes[1].try_into()?, bytes[6..6 + 2 * Self::get_vec_size(&bytes[2..6])?].chunks(2)
+            5 => Ok(Payload::ShortVector(bytes[1].try_into()?, bytes[6..6 + 2 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(2)
                 .map(|x| x.try_into().map(u16::from_le_bytes)).collect::<Result<Vec<u16>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -6 => Ok(Payload::Int(u32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            6 => Ok(Payload::IntVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            6 => Ok(Payload::IntVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(u32::from_le_bytes)).collect::<Result<Vec<u32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -7 => Ok(Payload::Long(u64::from_le_bytes(bytes[1..9].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            7 => Ok(Payload::LongVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks(8)
+            7 => Ok(Payload::LongVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(8)
                 .map(|x| x.try_into().map(u64::from_le_bytes)).collect::<Result<Vec<u64>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -8 => Ok(Payload::Real(f32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            8 => Ok(Payload::RealVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            8 => Ok(Payload::RealVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(f32::from_le_bytes)).collect::<Result<Vec<f32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -9 => Ok(Payload::Float(f64::from_le_bytes(bytes[1..9].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            9 => Ok(Payload::FloatVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks(8)
+            9 => Ok(Payload::FloatVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(8)
                 .map(|x| x.try_into().map(f64::from_le_bytes)).collect::<Result<Vec<f64>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -10 => Ok(Payload::Char(char::from(bytes[1]))),
             10 => Ok(Payload::CharVector(bytes[1].try_into()?, AsciiString::from_ascii::<&[u8]>(
@@ -180,28 +181,28 @@ impl Payload {
                 Ok(Payload::SymbolVector(bytes[1].try_into()?, vec))
             }
             -12 => Ok(Payload::Timestamp(u64::from_le_bytes(bytes[1..9].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            12 => Ok(Payload::TimestampVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks(8)
+            12 => Ok(Payload::TimestampVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(8)
                 .map(|x| x.try_into().map(u64::from_le_bytes)).collect::<Result<Vec<u64>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -13 => Ok(Payload::Month(u32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            13 => Ok(Payload::MonthVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            13 => Ok(Payload::MonthVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(u32::from_le_bytes)).collect::<Result<Vec<u32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -14 => Ok(Payload::Date(u32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            14 => Ok(Payload::DateVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            14 => Ok(Payload::DateVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(u32::from_le_bytes)).collect::<Result<Vec<u32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -15 => Ok(Payload::DateTime(u64::from_le_bytes(bytes[1..9].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            15 => Ok(Payload::DateTimeVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks(8)
+            15 => Ok(Payload::DateTimeVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(8)
                 .map(|x| x.try_into().map(u64::from_le_bytes)).collect::<Result<Vec<u64>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -16 => Ok(Payload::TimeSpan(u64::from_le_bytes(bytes[1..9].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            16 => Ok(Payload::TimeSpanVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks(8)
+            16 => Ok(Payload::TimeSpanVector(bytes[1].try_into()?, bytes[6..6 + 8 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(8)
                 .map(|x| x.try_into().map(u64::from_le_bytes)).collect::<Result<Vec<u64>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -17 => Ok(Payload::Minute(u32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            17 => Ok(Payload::MinuteVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            17 => Ok(Payload::MinuteVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(u32::from_le_bytes)).collect::<Result<Vec<u32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -18 => Ok(Payload::Second(u32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            18 => Ok(Payload::SecondVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            18 => Ok(Payload::SecondVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(u32::from_le_bytes)).collect::<Result<Vec<u32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             -19 => Ok(Payload::Time(u32::from_le_bytes(bytes[1..5].try_into().map_err(|_| String::from("Failed to parse type"))?))),
-            19 => Ok(Payload::TimeVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks(4)
+            19 => Ok(Payload::TimeVector(bytes[1].try_into()?, bytes[6..6 + 4 * Self::get_vec_size(&bytes[2..6])?].chunks_exact(4)
                 .map(|x| x.try_into().map(u32::from_le_bytes)).collect::<Result<Vec<u32>, TryFromSliceError>>().map_err(|x| x.to_string())?)),
             98 => Ok(Payload::Table(bytes[1].try_into()?, Box::new(Payload::from_bytes(&bytes[2..])?))),
             99 => {
