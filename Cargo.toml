@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 ascii = "^1"
-hex = "^0.4"
+
 
 [dev-dependencies]
-
+hex = "^0.4"
