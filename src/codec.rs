@@ -343,6 +343,15 @@ mod tests {
     }
 
     #[test]
+    pub fn test_bool_vector_marshalling() {
+        let char_vec_hex_str = hex::decode("0100000011000000010003000000010001").unwrap();
+        if let Payload::BoolVector(x, string) = Payload::from_bytes(&char_vec_hex_str[8..]).unwrap() {
+            assert_eq!(x, NoAttribute);
+            assert_eq!(string, vec![true,false,true]);
+        }
+    }
+
+    #[test]
     pub fn test_char_vector_marshalling() {
         let char_vec_hex_str = hex::decode("01000000180000000a000a00000074686174736372617a79").unwrap();
         if let Payload::CharVector(x, string) = Payload::from_bytes(&char_vec_hex_str[8..]).unwrap() {
