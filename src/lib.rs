@@ -41,16 +41,16 @@ impl KdbConnection {
         let mut msg_size_array = [0u8; 4];
         msg_size_array.clone_from_slice(&header[4..8]);
         let msg_size: u32 = u32::from_le_bytes(msg_size_array);
-        let mut buf = Vec::with_capacity(msg_size as usize);
+        let mut buf = vec![0;msg_size as usize];
         // Alignment - Potential performance improvement at the cost of perhaps portability,
         // and having to deal with endianness - easy optimisation if both source and target are the same
         // endianness
         // buf.extend_from_slice(&[0;10]);
 
 
-        buf.extend_from_slice(&header);
+        buf[0..8].copy_from_slice(&header);
 
-        std::io::Read::by_ref(&mut self.tcp_connection).take((msg_size - 8) as u64).read_to_end(&mut buf).map_err(|x| x.to_string())?;
+        std::io::Read::by_ref(&mut self.tcp_connection).take((msg_size - 8) as u64).read_exact(&mut buf[8..]).map_err(|x| x.to_string())?;
 
         if header[2] == 1 {
             let uncompressed = uncompress(&buf[8..])?;

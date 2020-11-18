@@ -64,15 +64,15 @@ impl<'a> KdbRequest<'a> {
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut ret_val = Vec::new();
-        ret_val.push(self.architecture as u8);
-        ret_val.push(self.synchronisation_type as u8);
-        ret_val.extend_from_slice(&PADDING_BYTES);
-        ret_val.extend_from_slice(&(HEADER_LEN + TYPE_LEN + ATTRIBUTE_LEN + VECTOR_LEN + self.request.len() as u32).to_le_bytes());
-        ret_val.push(10);
-        ret_val.push(0);
-        ret_val.extend_from_slice(&(self.request.as_bytes().len() as u32).to_le_bytes());
-        ret_val.extend_from_slice(self.request.as_bytes());
+        let mut ret_val = vec![0; (HEADER_LEN + TYPE_LEN + ATTRIBUTE_LEN + VECTOR_LEN + self.request.len() as u32) as usize];
+        ret_val[0] = self.architecture as u8;
+        ret_val[1] = self.synchronisation_type as u8;
+        ret_val[2..4].copy_from_slice(&PADDING_BYTES);
+        ret_val[4..8].copy_from_slice(&(HEADER_LEN + TYPE_LEN + ATTRIBUTE_LEN + VECTOR_LEN + self.request.len() as u32).to_le_bytes());
+        ret_val[8] = 10;
+        ret_val[9] = 0;
+        ret_val[10..14].copy_from_slice(&(self.request.as_bytes().len() as u32).to_le_bytes());
+        ret_val[14..].copy_from_slice(self.request.as_bytes());
         ret_val
     }
 }
@@ -165,9 +165,7 @@ impl Payload {
             -10 => Ok(Payload::Char(char::from(bytes[1]))),
             10 => Ok(Payload::CharVector(bytes[1].try_into()?, AsciiString::from_ascii::<&[u8]>(
                 &bytes[6..6 + Self::get_vec_size(&bytes[2..6])?]).map_err(|x| x.to_string())?)),
-            -11 => {
-                Ok(Payload::Symbol(AsciiString::from_ascii::<&[u8]>(&bytes[1..].iter().copied().take_while(|x| *x != 0).collect::<Vec<u8>>().as_slice()).map_err(|x| x.to_string())?))
-            }
+            -11 => Ok(Payload::Symbol(AsciiString::from_ascii::<&[u8]>(&bytes[1..].iter().copied().take_while(|x| *x != 0).collect::<Vec<u8>>().as_slice()).map_err(|x| x.to_string())?)),
             11 => {
                 let vec_size = Self::get_vec_size(&bytes[2..6])?;
                 let mut vec = Vec::new();
@@ -212,6 +210,7 @@ impl Payload {
             }
             -101 => Ok(Payload::Nil),
             101 => Ok(Payload::Nil),
+            -128 => Ok(Payload::Error(AsciiString::from_ascii::<&[u8]>(&bytes[1..].iter().copied().take_while(|x| *x != 0).collect::<Vec<u8>>().as_slice()).map_err(|x| x.to_string())?)),
             _ => Err(format!("Failed to find type, {}", type_byte))
         }
     }
