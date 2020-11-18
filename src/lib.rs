@@ -124,13 +124,13 @@ pub fn uncompress(bytes: &[u8]) -> Result<Vec<u8>, String> {
 #[cfg(test)]
 mod tests {
     use crate::{uncompress, KdbConnection};
-    use crate::codec::{Payload, KdbRequest};
+    use crate::codec::{Payload, KdbRequest, VectorAttribute};
     use crate::codec::Payload::LongVector;
     use crate::codec::VectorAttribute::NoAttribute;
     use std::ops::Range;
     use std::io::{Read, Write};
     use std::io::Result;
-    use ascii::{AsciiString, AsciiChar};
+    use ascii::AsciiString;
 
     #[test]
     pub fn test_uncompress() {
@@ -187,6 +187,7 @@ mod tests {
         kdb_connection.tcp_connection_read.to_read = hex::decode("010000001a0000000a000c00000069276d736f6d657175657279").unwrap();
         let payload = kdb_connection.query(KdbRequest::new("somequery").unwrap()).unwrap();
         if let Payload::CharVector(attriubte,string) = payload {
+            assert_eq!(attriubte,VectorAttribute::NoAttribute);
             assert_eq!(string,"i'msomequery");
         }
 
