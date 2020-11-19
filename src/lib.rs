@@ -12,14 +12,16 @@ pub struct KdbConnection<R : Read,W : Write> {
     tcp_connection_write: W
 }
 
-impl <R : Read,W : Write> KdbConnection<R,W> {
+impl KdbConnection<TcpStream,TcpStream> {
     pub fn new<T: ToSocketAddrs>(address: T) -> std::io::Result<KdbConnection<TcpStream, TcpStream>> {
         let tcp_connection_write = TcpStream::connect(address)?;
         let tcp_connection_read = tcp_connection_write.try_clone()?;
 
         Ok(KdbConnection { tcp_connection_read,tcp_connection_write})
     }
+}
 
+impl <R : Read,W : Write> KdbConnection<R,W> {
     /// Sends handshake byte
     pub fn connect(&mut self, user: &str, pwd: &str) -> std::io::Result<()> {
         let mut user_pass = format!("{}:{}", user, pwd);
